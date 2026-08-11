@@ -7,7 +7,8 @@
   "scripts": {
     "test": "vitest run",
     "demo": "tsx scripts/demo-definition-of-done.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:site": "tsx scripts/build-site.ts"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
