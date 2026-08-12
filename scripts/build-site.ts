@@ -4,7 +4,7 @@
  *
  * Local: npm run build:site    Vercel: buildCommand (see vercel.json)
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createSystem } from '../src/platform/orchestration/system-factory.js';
 import { DesignBrief } from '../src/features/design-studio/models/concept.js';
@@ -147,7 +147,7 @@ footer{text-align:center;color:var(--dim);font-size:13px;margin-top:70px;font-fa
 <body>
 <header>
   <h1>Beyond <b>Style</b> UAE</h1>
-  <p>Agentic Product Design Operating System — Release 1 · Definition-of-Done run (§51)</p>
+  <p>Agentic Product Design Operating System — Release 1 · Definition-of-Done run (§51) · <a style="color:var(--gold)" href="/">open the live Design Studio</a></p>
   <p>"${esc(brief.title)}" · target AED 249 · required margin 60%</p>
 </header>
 <main>
@@ -210,5 +210,8 @@ footer{text-align:center;color:var(--dim);font-size:13px;margin-top:70px;font-fa
 </body>
 </html>
 `;
-writeFileSync(join(out, 'index.html'), html);
-console.log(`Site built: public/index.html + artifacts (design ${result.designId}, readiness ${result.readiness.total}, lifecycle ${result.lifecycle.current})`);
+writeFileSync(join(out, 'snapshot.html'), html);
+// The interactive Design Studio app is the landing page; the generated
+// snapshot remains the build-time verification record at /snapshot.html.
+copyFileSync(join(process.cwd(), 'web', 'index.html'), join(out, 'index.html'));
+console.log(`Site built: index.html (Design Studio app) + snapshot.html + artifacts (design ${result.designId}, readiness ${result.readiness.total}, lifecycle ${result.lifecycle.current})`);

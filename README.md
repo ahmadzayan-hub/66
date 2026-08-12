@@ -12,9 +12,21 @@ same design.
 
 ```
 npm install
-npm test          # 60 automated tests covering §48 of the master spec
-npm run demo      # Definition-of-Done scenario (§51)
+npm test          # 66 automated tests covering §48 of the master spec
+npm run demo      # Definition-of-Done scenario (§51), CLI output
+npm run build:site && npm run dev   # local Design Studio at http://localhost:3000
 ```
+
+## Live Design Studio (Vercel)
+
+The deployed site is an interactive Design Studio: set an Arabic name,
+calligraphy style, product family, concept, target price and margin, toggle
+the mandatory human gates, and run the real gate chain server-side
+(`api/pipeline.ts`, a Vercel serverless function). Results render live —
+scores, per-gate verdicts, block reasons, the issue log with correction
+routing, the approved master artwork, the production SVG preview and
+SVG/DXF/record downloads. `/snapshot.html` is the build-time verification
+run: if the pipeline ever regressed, the deployment itself would fail.
 
 The demo executes the acceptance scenario end-to-end — *"Create an original
 men's 925 sterling silver personalised Arabic bracelet for UAE customers with
