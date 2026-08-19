@@ -28,6 +28,20 @@ routing, the approved master artwork, the production SVG preview and
 SVG/DXF/record downloads. `/snapshot.html` is the build-time verification
 run: if the pipeline ever regressed, the deployment itself would fail.
 
+### Optional: real LLM (Claude) for concept generation
+
+By default every agent — including Creative Design — runs on deterministic
+code, so the whole pipeline works with zero external dependencies. Set the
+`ANTHROPIC_API_KEY` environment variable (Vercel: Project Settings →
+Environment Variables; local: `export ANTHROPIC_API_KEY=...` before
+`npm run dev`) to let the Creative Design agent ask Claude for concept
+proposals instead. The LLM only *proposes* — every gate that matters (Brand,
+Arabic, Engineering, Safety, Cost, Commercial, Originality, QA) stays
+deterministic and unchanged, and any invalid or non-distinct LLM proposal
+falls back to the built-in concept library automatically. The Design
+Studio's Concept Gate row shows which path actually produced the run's
+concepts. See `docs/06-model-gateway.md` for the full design.
+
 The demo executes the acceptance scenario end-to-end — *"Create an original
 men's 925 sterling silver personalised Arabic bracelet for UAE customers with
 a target retail price of AED 249"* — producing the structured brief, 4

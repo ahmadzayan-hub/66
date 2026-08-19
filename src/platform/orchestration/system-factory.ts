@@ -17,7 +17,8 @@ import { MaterialRepository, seedMaterials } from '../../features/materials/mate
 import { SvgExporter } from '../../features/cad/exporters/svg-exporter.js';
 import { MarketingAgent } from '../../features/marketing/marketing-agent.js';
 import { MarketIntelligenceAgent } from '../../features/analytics/market-intelligence-agent.js';
-import { ModelGateway, StubProvider } from '../model-gateway/gateway.js';
+import { ModelGateway, ModelProvider, StubProvider } from '../model-gateway/gateway.js';
+import { AnthropicProvider } from '../model-gateway/providers/anthropic-provider.js';
 
 export interface BeyondStyleOS {
   audit: AuditLog;
@@ -47,7 +48,15 @@ export function createSystem(): BeyondStyleOS {
   const materials = new MaterialRepository();
   seedMaterials(materials);
   const ruleBook = new RuleBook();
-  const gateway = new ModelGateway([new StubProvider()], audit);
+
+  // Real LLM provider is opt-in via ANTHROPIC_API_KEY; absent that, the
+  // gateway serves only the deterministic stub and every agent behaves
+  // exactly as in a key-less environment (local dev, CI, tests).
+  const providers: ModelProvider[] = [];
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey) providers.push(new AnthropicProvider(anthropicKey));
+  providers.push(new StubProvider());
+  const gateway = new ModelGateway(providers, audit);
 
   const deps: PipelineDependencies = {
     audit,
@@ -57,7 +66,7 @@ export function createSystem(): BeyondStyleOS {
     artworks,
     approvals,
     agents: {
-      creative: new CreativeDesignAgent(),
+      creative: new CreativeDesignAgent(anthropicKey ? gateway : undefined, materials.all().map((m) => m.materialId)),
       brand: new BrandDnaAgent(),
       manufacturing: new ManufacturingAgent(ruleBook),
       safety: new SafetyAgent(materials),

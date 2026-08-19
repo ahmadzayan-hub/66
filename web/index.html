@@ -198,7 +198,7 @@ function render(d) {
 
   const g = d.gates;
   const rows = [
-    ['Concept Gate', 'PASS', `4 materially different concepts — selected "${d.selectedConcept.conceptName}"`],
+    ['Concept Gate', 'PASS', `4 materially different concepts (${d.conceptSource === 'llm' ? 'live Claude proposal, validated' : 'deterministic library — no LLM configured or LLM output failed validation'}) — selected "${d.selectedConcept.conceptName}"`],
     ['Brand Gate', `${s.brandFit}/100`, g.brand.matched.slice(0, 4).join(', ') || '—'],
     d.arabic
       ? ['Arabic Gate', d.arabic.status === 'APPROVED' ? 'PASS' : d.arabic.status,

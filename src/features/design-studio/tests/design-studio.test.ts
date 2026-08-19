@@ -47,14 +47,14 @@ describe('design versioning (§24)', () => {
 });
 
 describe('concept distinctness (§8)', () => {
-  it('the creative agent produces 4 materially different concepts', () => {
+  it('the creative agent produces 4 materially different concepts (no gateway: deterministic path)', async () => {
     const brief: DesignBrief = {
       briefId: 'b', title: 't', family: 'MEN', productType: 'bracelet',
       customerSegment: 's', customerPersona: 'p', customerProblem: 'c', marketRationale: 'm',
       targetRetailPriceAed: 249, requiredGrossMarginPct: 60, personalisation: true,
       arabicText: 'خالد', isChildProduct: false, isWearableChildProduct: false, isReligiousText: false,
     };
-    const concepts = new CreativeDesignAgent().generateConcepts(brief);
+    const concepts = await new CreativeDesignAgent().generateConcepts(brief);
     expect(concepts).toHaveLength(4);
     expect(() => assertMateriallyDifferent(concepts.map((c) => c.payload))).not.toThrow();
   });
