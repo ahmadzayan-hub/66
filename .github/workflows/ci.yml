@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - claude/beyond-style-uae-os-ji8ygo
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: typecheck / test / pipeline build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      # The site build runs the real gate chain. If the pipeline ever
+      # regressed, this step fails and nothing ships.
+      - name: Build site (runs the Definition-of-Done pipeline)
+        run: npm run build:site
+
+      - name: Definition-of-Done scenario
+        run: npm run demo
