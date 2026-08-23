@@ -65,3 +65,37 @@ fully testable offline and in CI. Real providers are added by implementing the
 changes to feature code. This also demonstrates the required property that the
 system's safety and engineering guarantees do not depend on any model's
 behaviour.
+
+## Real provider: Anthropic (Claude), scoped to concept generation
+
+A real provider — `AnthropicProvider` (`src/platform/model-gateway/providers/
+anthropic-provider.ts`) — is wired in for the `reasoning` task profile, used
+by the Creative Design agent only. This is the one place a live LLM adds
+value without touching approval authority: it proposes concepts; every
+downstream gate (Brand, Arabic, Engineering, Safety, Cost, Commercial,
+Originality, QA) remains deterministic code, unchanged, per the master
+prompt's core operating principle (§2) and rule 52.8.
+
+- **Activation**: set the `ANTHROPIC_API_KEY` environment variable (Vercel
+  project settings, or a local shell/`.env` for `npm run dev`). Absent it,
+  the gateway registers only the `StubProvider` and every agent behaves
+  exactly as the key-less Release 1 baseline — zero behavioural change,
+  verified by the full test suite running with no key set.
+- **Structured output**: requests force a tool call (`propose_concepts`)
+  against a fixed JSON schema, so the model cannot return anything but the
+  declared shape — no free-text parsing.
+- **Validation before trust**: every LLM proposal is checked against real
+  material IDs, positive dimensions, valid enums, and the existing
+  `assertMateriallyDifferent` distinctness rule (§8) before it is allowed
+  into the pipeline. Any validation failure, timeout, or API error falls
+  back to the deterministic concept library automatically — the pipeline's
+  correctness never depends on the LLM call succeeding.
+- **Transparency**: `CreativeDesignAgent.lastGenerationSource` records
+  which path produced the result (`'llm'` or `'deterministic'`) for each
+  run; the API (`api/pipeline.ts`) and Design Studio UI surface this on the
+  Concept Gate row rather than implying AI authorship that didn't happen.
+- **Data minimisation**: only brief-level fields (family, persona text,
+  price, margin, allowed material IDs) are sent — no customer PII, no
+  Restricted Production Data (which the gateway refuses outright regardless
+  of provider).
+- **Model**: `claude-sonnet-5` by default, overridable via `ANTHROPIC_MODEL`.

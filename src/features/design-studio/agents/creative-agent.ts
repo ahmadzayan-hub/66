@@ -1,5 +1,7 @@
 import { AgentIdentity, Artifact, makeArtifact } from '../../../platform/kernel.js';
 import { DesignBrief, DesignConcept, DimensionsMm } from '../models/concept.js';
+import { ModelGateway } from '../../../platform/model-gateway/gateway.js';
+import { AnthropicToolRequest } from '../../../platform/model-gateway/providers/anthropic-provider.js';
 
 export class ConceptDistinctnessError extends Error {}
 
@@ -38,17 +40,160 @@ const BRACELET_DIMS = (minLine: number, gap: number, extras?: Partial<Dimensions
   ...extras,
 });
 
+const CONCEPT_TOOL_SCHEMA = {
+  type: 'object',
+  properties: {
+    concepts: {
+      type: 'array',
+      minItems: 4,
+      maxItems: 4,
+      items: {
+        type: 'object',
+        required: [
+          'conceptName', 'designStory', 'targetCustomer', 'visualLanguage', 'materialId',
+          'dimensions', 'estimatedWeightG', 'manufacturingMethod', 'personalisationOptions',
+          'complexity', 'estimatedCostBand', 'differentiation', 'risks', 'construction',
+          'personalisationMechanic',
+        ],
+        properties: {
+          conceptName: { type: 'string' },
+          designStory: { type: 'string' },
+          targetCustomer: { type: 'string' },
+          visualLanguage: { type: 'string' },
+          materialId: { type: 'string' },
+          dimensions: {
+            type: 'object',
+            required: ['lengthMm', 'widthMm', 'thicknessMm', 'minLineWidthMm', 'minInternalGapMm', 'hasIsolatedArabicDots', 'hasFragileBridges'],
+            properties: {
+              lengthMm: { type: 'number' }, widthMm: { type: 'number' }, thicknessMm: { type: 'number' },
+              minLineWidthMm: { type: 'number' }, minInternalGapMm: { type: 'number' },
+              hasIsolatedArabicDots: { type: 'boolean' }, hasFragileBridges: { type: 'boolean' },
+            },
+          },
+          estimatedWeightG: { type: 'number' },
+          manufacturingMethod: { type: 'string' },
+          personalisationOptions: { type: 'array', items: { type: 'string' } },
+          complexity: { type: 'string', enum: ['LOW', 'MEDIUM', 'HIGH'] },
+          estimatedCostBand: { type: 'string', enum: ['ENTRY', 'CORE', 'PREMIUM'] },
+          differentiation: { type: 'string' },
+          risks: { type: 'array', items: { type: 'string' } },
+          construction: { type: 'string' },
+          personalisationMechanic: { type: 'string' },
+        },
+      },
+    },
+  },
+  required: ['concepts'],
+} as const;
+
+/** Structural + business-rule validation of an LLM concept proposal. Throws on any defect. */
+function validateLlmConcepts(raw: unknown, allowedMaterialIds: string[]): DesignConcept[] {
+  const obj = raw as { concepts?: unknown[] };
+  if (!Array.isArray(obj?.concepts) || obj.concepts.length !== 4) {
+    throw new Error('LLM did not return exactly 4 concepts');
+  }
+  return obj.concepts.map((c, i) => {
+    const concept = c as DesignConcept;
+    const d = concept?.dimensions;
+    if (!concept?.materialId || !allowedMaterialIds.includes(concept.materialId)) {
+      throw new Error(`concept[${i}] has unknown materialId "${concept?.materialId}"`);
+    }
+    if (!d || [d.lengthMm, d.widthMm, d.thicknessMm, d.minLineWidthMm, d.minInternalGapMm].some((n) => !(typeof n === 'number' && n > 0))) {
+      throw new Error(`concept[${i}] has invalid or non-positive dimensions`);
+    }
+    if (!concept.estimatedWeightG || concept.estimatedWeightG <= 0) {
+      throw new Error(`concept[${i}] has invalid estimatedWeightG`);
+    }
+    if (!['LOW', 'MEDIUM', 'HIGH'].includes(concept.complexity)) throw new Error(`concept[${i}] has invalid complexity`);
+    if (!['ENTRY', 'CORE', 'PREMIUM'].includes(concept.estimatedCostBand)) throw new Error(`concept[${i}] has invalid estimatedCostBand`);
+    if (!Array.isArray(concept.personalisationOptions) || !Array.isArray(concept.risks)) {
+      throw new Error(`concept[${i}] has invalid array fields`);
+    }
+    return concept;
+  });
+}
+
+function buildConceptPrompt(brief: DesignBrief, allowedMaterialIds: string[]): AnthropicToolRequest {
+  return {
+    system:
+      'You are the Creative Design agent inside Beyond Style UAE\'s product design pipeline. ' +
+      'You propose jewellery concepts only — you never approve, evaluate, or make manufacturability, ' +
+      'safety or cost decisions; deterministic downstream gates do that. Every concept you propose will ' +
+      'be independently checked for brand fit, engineering feasibility, safety, cost ceiling, originality ' +
+      'and QA before anything is produced. Do not invent Arabic lettering or claim any material has properties ' +
+      '(hypoallergenic, certified, etc.) beyond what is stated. Propose real jewellery construction techniques only.',
+    userPrompt:
+      `Design brief:\n` +
+      `- Family: ${brief.family}, product type: ${brief.productType}\n` +
+      `- Target customer: ${brief.customerPersona} (${brief.customerSegment})\n` +
+      `- Problem: ${brief.customerProblem}\n` +
+      `- Target retail price: AED ${brief.targetRetailPriceAed}, required gross margin: ${brief.requiredGrossMarginPct}%\n` +
+      `- Personalisation requested: ${brief.personalisation}${brief.arabicText ? ` (Arabic text element present — do not invent the letters, just note that an Arabic engraving area is needed)` : ''}\n` +
+      `- Allowed materialId values (use one EXACTLY as given per concept): ${allowedMaterialIds.join(', ')}\n\n` +
+      'Propose exactly 4 concepts for a bracelet in this brief\'s family that are materially different from ' +
+      'each other — each pair must differ in at least 2 of: visual language, construction technique, ' +
+      'material/cost band, personalisation mechanic. Do not produce 4 cosmetic variations of one idea. ' +
+      'All dimensions are in millimetres; minLineWidthMm and minInternalGapMm should reflect realistic laser ' +
+      'engraving/cutting tolerances for the material and complexity you choose.',
+    tool: {
+      name: 'propose_concepts',
+      description: 'Return exactly 4 materially different jewellery design concepts matching the schema.',
+      input_schema: CONCEPT_TOOL_SCHEMA,
+    },
+    maxTokens: 4096,
+  };
+}
+
 /**
  * Creative Design agent (§8): four materially different concepts per brief.
- * Release 1 uses a deterministic concept library keyed by brief attributes;
- * the Model Gateway slot is where generative concepting plugs in — its
- * output must still pass assertMateriallyDifferent and every downstream gate.
+ * When a live Model Gateway is supplied (ANTHROPIC_API_KEY configured), the
+ * agent asks Claude to propose concepts, validates the response structurally
+ * and against business rules, and falls back to the deterministic library on
+ * any failure — the pipeline's behaviour never depends on the LLM succeeding.
+ * The LLM's output must still pass assertMateriallyDifferent and every
+ * downstream gate exactly like the deterministic path.
  */
 export class CreativeDesignAgent implements AgentIdentity {
   agentId = 'agent-03-creative-design';
   capability = 'generate' as const;
 
-  generateConcepts(brief: DesignBrief): Artifact<DesignConcept>[] {
+  /**
+   * Which path produced the most recent generateConcepts() result — surfaced
+   * to the UI/API so users can see, per run, whether a real model was used
+   * or the pipeline fell back to the deterministic library (never silently
+   * misrepresented as "AI-generated" when it wasn't).
+   */
+  lastGenerationSource: 'llm' | 'deterministic' = 'deterministic';
+
+  constructor(
+    private gateway?: ModelGateway,
+    private allowedMaterialIds: string[] = ['MAT-925', 'MAT-999', 'MAT-SS316', 'MAT-925-GP', 'MAT-925-RGP', 'MAT-925-RH', 'MAT-925-BRH', 'MAT-LEATHER', 'MAT-ONYX', 'MAT-MOP'],
+  ) {}
+
+  async generateConcepts(brief: DesignBrief): Promise<Artifact<DesignConcept>[]> {
+    if (this.gateway) {
+      try {
+        const response = await this.gateway.run({
+          task: 'reasoning',
+          payloadClass: 'INTERNAL',
+          input: buildConceptPrompt(brief, this.allowedMaterialIds),
+        });
+        // Only trust a genuinely live provider's output, never the offline stub's echo.
+        if (response.provider !== 'stub-deterministic') {
+          const concepts = validateLlmConcepts(response.output, this.allowedMaterialIds);
+          assertMateriallyDifferent(concepts);
+          this.lastGenerationSource = 'llm';
+          return concepts.map((c) => makeArtifact('design-concept', [this.agentId], c));
+        }
+      } catch {
+        // Any LLM/validation failure: fall through to the deterministic library below.
+      }
+    }
+    this.lastGenerationSource = 'deterministic';
+    return this.generateDeterministicConcepts(brief);
+  }
+
+  generateDeterministicConcepts(brief: DesignBrief): Artifact<DesignConcept>[] {
     const persona = brief.customerPersona;
     const arabic = Boolean(brief.arabicText);
     const concepts: DesignConcept[] = [

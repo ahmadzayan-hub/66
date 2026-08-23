@@ -137,6 +137,7 @@ export async function runPipelineRequest(body: PipelineRequestBody) {
     blockReasons: result.blockReasons,
     lifecycle: result.lifecycle.transitions.map((t) => ({ from: t.from, to: t.to, actor: t.actorId, reason: t.reason })),
     currentState: result.lifecycle.current,
+    conceptSource: os.deps.agents.creative.lastGenerationSource,
     concepts: result.allConcepts.map((c) => ({
       conceptName: c.payload.conceptName,
       designStory: c.payload.designStory,

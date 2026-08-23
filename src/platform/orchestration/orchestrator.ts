@@ -89,7 +89,7 @@ export class DesignOrchestrator {
     bus.publish({ type: 'DesignBriefCreated', designId, emitterAgentId: SYSTEM.id, payload: brief });
 
     // ---- Concept Gate: 4 materially different concepts ----
-    const concepts = agents.creative.generateConcepts(brief);
+    const concepts = await agents.creative.generateConcepts(brief);
     const selected = options.conceptSelector ? options.conceptSelector(concepts) : concepts[0]!;
     const version = versions.createInitial(designId, selected.payload, 'system', agents.creative.agentId);
     lifecycle.versionId = version.versionId;

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>استوديو التصميم المشترك — Beyond Style</title>
+<style>
+:root{--bg:#14141a;--panel:#1d1d26;--panel2:#22222d;--line:#2e2e3a;--silver:#c9ccd6;--gold:#c8a96a;--ink:#e8e9ee;--dim:#8d90a0;--ok:#5dbb7f;--bad:#e26d6d;--warn:#d9a441}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.8 Georgia,'Times New Roman',serif;padding-bottom:90px}
+header{padding:40px 24px 26px;text-align:center;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#191922,#14141a)}
+h1{font-size:26px;font-weight:400;letter-spacing:.06em;color:var(--silver)}
+h1 b{color:var(--gold);font-weight:400}
+header p{color:var(--dim);margin-top:6px;font-size:14px}
+header a{color:var(--gold);text-decoration:none}
+main{max-width:900px;margin:0 auto;padding:0 20px}
+.steps{display:flex;gap:6px;justify-content:center;margin:26px 0 6px;flex-wrap:wrap}
+.step{font-size:11px;letter-spacing:.08em;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-family:Verdana,sans-serif}
+.step.active{color:#14141a;background:var(--gold);border-color:var(--gold)}
+.step.done{color:var(--ok);border-color:var(--ok)}
+section{display:none;margin-top:26px}
+section.visible{display:block}
+h2{font-size:20px;color:var(--silver);margin-bottom:4px;font-weight:400}
+.sub{color:var(--dim);font-size:14px;margin-bottom:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px}
+textarea{width:100%;min-height:110px;background:#15151d;border:1px solid var(--line);border-radius:8px;color:var(--gold);padding:14px;font:20px/1.7 Georgia,serif;direction:rtl;resize:vertical}
+textarea::placeholder{color:#5a5d6e;font-size:16px}
+.examples{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.examples button{background:var(--panel2);border:1px solid var(--line);color:var(--silver);border-radius:999px;padding:5px 14px;font:13px Georgia,serif;cursor:pointer}
+.examples button:hover{border-color:var(--gold);color:var(--gold)}
+.note{color:var(--dim);font-size:12px;margin-top:12px;font-family:Verdana,sans-serif}
+.btn{background:var(--gold);color:#14141a;border:0;border-radius:8px;padding:12px 32px;font:14px Verdana,sans-serif;letter-spacing:.1em;cursor:pointer;margin-top:18px}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn.ghost{background:transparent;color:var(--silver);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--gold);color:var(--gold)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+label{display:block;font-family:Verdana,sans-serif;font-size:11px;letter-spacing:.1em;color:var(--dim);margin-bottom:6px}
+input,select{width:100%;background:#15151d;border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:10px 12px;font:16px Georgia,serif}
+input.ar{font-size:22px;color:var(--gold);direction:rtl}
+.warnings{margin-top:14px}
+.warnings p{color:var(--warn);font-size:13px;border-inline-start:3px solid var(--warn);padding-inline-start:10px;margin-top:6px}
+.concepts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.concept{background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;transition:border-color .15s}
+.concept:hover{border-color:var(--silver)}
+.concept.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.concept h3{color:var(--gold);font-size:17px;font-weight:400;margin-bottom:6px}
+.concept p{color:var(--dim);font-size:13.5px;line-height:1.7}
+.concept .meta{margin-top:10px;font-family:Verdana,sans-serif;font-size:11px;color:var(--silver);display:flex;gap:12px;flex-wrap:wrap}
+.gates{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px}
+.gate{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.gate .t{font-family:Verdana,sans-serif;font-size:11px;letter-spacing:.1em;color:var(--dim)}
+.gate .v{font-size:17px;margin-top:4px}
+.gate .d{font-size:12px;color:var(--dim);margin-top:2px}
+.pass{color:var(--ok)}.fail{color:var(--bad)}.warn{color:var(--warn)}
+.score{background:var(--panel);border:1px solid var(--gold);border-radius:12px;padding:18px;text-align:center}
+.score .n{font-size:38px;color:var(--gold)}
+.score .l{font-family:Verdana,sans-serif;font-size:11px;letter-spacing:.15em;color:var(--dim)}
+.preview{background:#101016;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:14px;text-align:center}
+.preview svg{max-width:100%;height:auto;background:#fff;border-radius:8px}
+.preview .cap{font-family:Verdana,sans-serif;font-size:11px;color:var(--dim);margin-top:10px}
+.blockers{border:1px solid var(--bad);background:#2a1c1f;border-radius:12px;padding:18px 22px;margin-top:16px}
+.blockers h3{color:var(--bad);font-size:14px;margin-bottom:8px}
+.blockers li{margin-inline-start:18px;color:#f0c9c9;font-size:14px}
+.progress{margin-top:16px}
+.progress p{font-family:Verdana,sans-serif;font-size:13px;color:var(--dim);margin-top:4px}
+.progress p.done{color:var(--ok)}
+.progress p.now{color:var(--gold)}
+.error{border:1px solid var(--bad);background:#2a1c1f;color:#f0c9c9;border-radius:10px;padding:14px 18px;margin-top:14px;font-size:14px}
+.approved{border:1px solid var(--ok);background:#16241c;border-radius:12px;padding:22px;text-align:center;margin-top:16px}
+.approved h3{color:var(--ok);font-weight:400;font-size:22px}
+.approved p{color:var(--silver);font-size:14px;margin-top:6px}
+.downloads{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+footer{margin-top:50px;text-align:center;color:var(--dim);font-size:12px;font-family:Verdana,sans-serif;padding:0 20px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>استوديو <b>التصميم المشترك</b></h1>
+  <p>صمّم قطعتك الفضية بالخط العربي — الذكاء يقترح، والهندسة الحتمية تحكم · <a href="/index.html">لوحة المشغّل ←</a></p>
+</header>
+<main>
+  <div class="steps" aria-hidden="true">
+    <span class="step active" id="st1">١ · اوصف</span>
+    <span class="step" id="st2">٢ · فهمنا طلبك</span>
+    <span class="step" id="st3">٣ · المفاهيم</span>
+    <span class="step" id="st4">٤ · بوابات التصميم</span>
+    <span class="step" id="st5">٥ · الاعتماد</span>
+  </div>
+
+  <!-- Step 1: describe -->
+  <section id="s1" class="visible">
+    <h2>كيف تحب تبدأ؟</h2>
+    <p class="sub">اكتب طلبك بلغتك الطبيعية — عربي أو إنجليزي أو خليط.</p>
+    <div class="panel">
+      <textarea id="intentText" placeholder="مثال: عايزة إسورة فضة باسم خالد بالديواني بميزانية ٢٥٠ درهم" aria-label="وصف التصميم المطلوب"></textarea>
+      <div class="examples">
+        <button type="button" data-ex="عايزة إسورة فضة باسم خالد بالديواني بميزانية 250">إسورة باسم خالد</button>
+        <button type="button" data-ex="سلسلة هدية باسم مريم بخط الثلث ٣٥٠ درهم">سلسلة هدية بالثلث</button>
+        <button type="button" data-ex="A silver ring for my wife with the name «لطيفة» in Naskh, around 400">Ring · Naskh · EN</button>
+      </div>
+      <button class="btn" id="btnUnderstand">افهم طلبي ←</button>
+      <p class="note">الإدخال بالصوت والصورة قادم في المرحلة التالية — النص متاح الآن.</p>
+      <div id="e1"></div>
+    </div>
+  </section>
+
+  <!-- Step 2: understood brief -->
+  <section id="s2">
+    <h2>فهمنا طلبك</h2>
+    <p class="sub">راجع وصحّح — لن نُشغّل أي شيء قبل تأكيدك.</p>
+    <div class="panel">
+      <div class="grid">
+        <div><label for="fProduct">المنتج</label>
+          <select id="fProduct">
+            <option value="bracelet">إسوارة · Bracelet</option>
+            <option value="necklace">سلسلة · Necklace</option>
+            <option value="pendant">تعليقة · Pendant</option>
+            <option value="ring">خاتم · Ring</option>
+            <option value="earrings">أقراط · Earrings</option>
+            <option value="cufflinks">كبك · Cufflinks</option>
+            <option value="keychain">ميدالية · Keychain</option>
+          </select></div>
+        <div><label for="fFamily">الفئة</label>
+          <select id="fFamily">
+            <option value="MEN">رجالي</option><option value="WOMEN">نسائي</option>
+            <option value="BABIES_CHILDREN">أطفال</option><option value="COUPLES">أزواج</option>
+            <option value="GIFTS">هدايا</option><option value="PERSONALISED">مخصص</option>
+            <option value="ARABIC_CALLIGRAPHY">خط عربي</option><option value="CORPORATE">شركات</option>
+            <option value="UAE_INSPIRED">إماراتي</option><option value="SEASONAL">موسمي</option>
+          </select></div>
+        <div><label for="fName">الاسم (نقش عربي)</label><input id="fName" class="ar" maxlength="20" placeholder="خالد"></div>
+        <div><label for="fStyle">الخط</label>
+          <select id="fStyle">
+            <option value="DIWANI">ديواني</option><option value="DIWANI_JALI">ديواني جلي</option>
+            <option value="NASKH">نسخ</option><option value="RUQAA">رقعة</option>
+            <option value="AREF_RUQAA">رقعة عارف</option><option value="AMIRI">أميري</option>
+            <option value="THULUTH_INSPIRED">مستوحى من الثلث</option>
+          </select></div>
+        <div><label for="fBudget">الميزانية (درهم)</label><input id="fBudget" type="number" min="50" max="100000" value="249"></div>
+      </div>
+      <div class="warnings" id="warnings"></div>
+      <div class="actions">
+        <button class="btn" id="btnConcepts">ولّد المفاهيم ←</button>
+        <button class="btn ghost" id="btnBack1">→ عدّل الوصف</button>
+      </div>
+      <div id="e2"></div>
+    </div>
+  </section>
+
+  <!-- Step 3: concepts -->
+  <section id="s3">
+    <h2>معرض المفاهيم</h2>
+    <p class="sub">مقترحات أصلية — اختر واحدًا لتمريره على بوابات الهندسة والسلامة والتكلفة.</p>
+    <div class="progress panel" id="p3"></div>
+    <div class="concepts" id="concepts"></div>
+    <div class="actions">
+      <button class="btn" id="btnGates" disabled>شغّل البوابات على اختياري ←</button>
+      <button class="btn ghost" id="btnBack2">→ عدّل الطلب</button>
+    </div>
+    <div id="e3"></div>
+  </section>
+
+  <!-- Step 4: gates -->
+  <section id="s4">
+    <h2>بوابات التصميم</h2>
+    <p class="sub">كل حكم هنا من المحرك الحتمي — الخط بالهندسة الحقيقية، لا صور ذكاء اصطناعي.</p>
+    <div class="progress panel" id="p4"></div>
+    <div id="gatesOut"></div>
+    <div class="actions" style="margin-top:16px">
+      <button class="btn" id="btnApprove" disabled>اعتمد تصميمي ✓</button>
+      <button class="btn ghost" id="btnBack3">→ جرّب مفهومًا آخر</button>
+    </div>
+    <div id="e4"></div>
+  </section>
+
+  <!-- Step 5: approved -->
+  <section id="s5">
+    <h2>تم اعتماد اختيارك</h2>
+    <div id="approvedOut"></div>
+  </section>
+</main>
+<footer>الصور المولدة بالذكاء الاصطناعي — إن استُخدمت — تصور المفهوم فقط؛ ملفات الإنتاج (SVG/DXF) تُشتق حصريًا من محرك الهندسة الحتمي وتمر بموافقات بشرية قبل التصنيع.</footer>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let intent=null, firstRun=null, selectedConcept=null, finalRun=null;
+
+function goto(n){
+  for(let i=1;i<=5;i++){
+    $('s'+i).classList.toggle('visible', i===n);
+    const st=$('st'+i);
+    st.classList.toggle('active', i===n);
+    st.classList.toggle('done', i<n);
+  }
+  window.scrollTo({top:0});
+}
+function err(id,msg){$(id).innerHTML=msg?'<div class="error" role="alert">'+msg+' <button class="btn ghost" style="margin-top:8px;padding:6px 14px" onclick="this.parentElement.remove()">حسنًا</button></div>':'';}
+function progress(el,steps,idx){
+  el.innerHTML=steps.map((s,i)=>'<p class="'+(i<idx?'done':i===idx?'now':'')+'">'+(i<idx?'✓ ':i===idx?'● ':'○ ')+s+'</p>').join('');
+}
+async function post(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(d.error||('HTTP '+r.status));
+  return d;
+}
+function briefBody(conceptName){
+  return {
+    productType:$('fProduct').value,
+    family:$('fFamily').value,
+    arabicText:$('fName').value.trim()||undefined,
+    calligraphyStyle:$('fStyle').value,
+    targetRetailPriceAed:Number($('fBudget').value)||249,
+    isChildProduct:$('fFamily').value==='BABIES_CHILDREN',
+    isWearableChildProduct:$('fFamily').value==='BABIES_CHILDREN'&&$('fProduct').value!=='keychain',
+    conceptName
+  };
+}
+
+document.querySelectorAll('.examples button').forEach(b=>b.addEventListener('click',()=>{$('intentText').value=b.dataset.ex;}));
+
+$('btnUnderstand').addEventListener('click', async ()=>{
+  const text=$('intentText').value.trim();
+  if(!text){err('e1','اكتب وصفًا أولًا.');return;}
+  err('e1','');$('btnUnderstand').disabled=true;
+  try{
+    intent=await post('/api/intent',{text});
+    $('fProduct').value=intent.productType;
+    $('fFamily').value=intent.family;
+    $('fName').value=intent.arabicText||'';
+    $('fStyle').value=intent.calligraphyStyle;
+    if(intent.targetRetailPriceAed)$('fBudget').value=intent.targetRetailPriceAed;
+    $('warnings').innerHTML=(intent.warnings||[]).map(w=>'<p>'+w+'</p>').join('');
+    goto(2);
+  }catch(e){err('e1','تعذر فهم الطلب: '+e.message);}
+  finally{$('btnUnderstand').disabled=false;}
+});
+$('btnBack1').addEventListener('click',()=>goto(1));
+$('btnBack2').addEventListener('click',()=>goto(2));
+$('btnBack3').addEventListener('click',()=>goto(3));
+
+$('btnConcepts').addEventListener('click', async ()=>{
+  if(!$('fName').value.trim()){err('e2','الاسم العربي مطلوب للنقش — أضفه ثم أعد المحاولة.');return;}
+  err('e2','');goto(3);
+  const steps=['استلام الموجز','توليد المفاهيم الأصلية','فحص الأصالة الأولي'];
+  progress($('p3'),steps,0);
+  $('concepts').innerHTML='';$('btnGates').disabled=true;selectedConcept=null;
+  $('btnConcepts').disabled=true;
+  try{
+    progress($('p3'),steps,1);
+    firstRun=await post('/api/pipeline',briefBody(undefined));
+    progress($('p3'),steps,3);
+    $('p3').innerHTML+='<p class="done">المصدر: '+(firstRun.conceptSource==='llm'?'اقتراح نموذج لغوي (تحت حكم البوابات)':'المولد الحتمي')+'</p>';
+    const cards=firstRun.concepts.map(c=>
+      '<div class="concept" role="button" tabindex="0" data-name="'+c.conceptName.replace(/"/g,'&quot;')+'">'+
+      '<h3>'+c.conceptName+'</h3><p>'+c.designStory+'</p>'+
+      '<div class="meta"><span>~'+c.estimatedWeightG+'g</span><span>'+c.complexity+'</span><span>'+c.estimatedCostBand+'</span></div></div>').join('');
+    $('concepts').innerHTML=cards;
+    document.querySelectorAll('.concept').forEach(el=>{
+      const pick=()=>{document.querySelectorAll('.concept').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');selectedConcept=el.dataset.name;$('btnGates').disabled=false;};
+      el.addEventListener('click',pick);
+      el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();}});
+    });
+  }catch(e){err('e3','توليد المفاهيم فشل: '+e.message);progress($('p3'),steps,0);}
+  finally{$('btnConcepts').disabled=false;}
+});
+
+function gateTile(t,v,cls,d){return '<div class="gate"><div class="t">'+t+'</div><div class="v '+cls+'">'+v+'</div>'+(d?'<div class="d">'+d+'</div>':'')+'</div>';}
+function verdictCls(v){return v==='PASS'||v==='GO'||v==='APPROVED'?'pass':(v==='CONDITIONAL'||v==='REVIEW'||v==='HUMAN_REVIEW_REQUIRED')?'warn':'fail';}
+
+$('btnGates').addEventListener('click', async ()=>{
+  if(!selectedConcept)return;
+  goto(4);err('e4','');$('btnApprove').disabled=true;$('gatesOut').innerHTML='';
+  const steps=['الخط العربي الهندسي (HarfBuzz-grade)','بوابة الهندسة والتصنيع','بوابة السلامة','بوابة التكلفة والهامش','الأصالة والجودة','ملفات الإنتاج'];
+  progress($('p4'),steps,0);
+  try{
+    finalRun=await post('/api/pipeline',briefBody(selectedConcept));
+    progress($('p4'),steps,6);
+    const g=finalRun.gates,s=finalRun.scores,ar=finalRun.arabic;
+    let html='<div class="gates">';
+    if(ar) html+=gateTile('سلامة الحرف العربي', ar.status==='APPROVED'?'سليم ✓':ar.status, ar.status==='APPROVED'?'pass':'warn', ar.letterCount+' حرفًا · '+ar.dotBearingLetters+' بنقاط · '+ar.style);
+    html+=gateTile('الهندسة والتصنيع', g.engineering.verdict, verdictCls(g.engineering.verdict), 'المخاطرة: '+g.engineering.risk+' · قابلية التصنيع '+s.manufacturability+'/100');
+    html+=gateTile('السلامة', g.safety.verdict==='HUMAN_REVIEW_REQUIRED'?'مراجعة بشرية مطلوبة':g.safety.verdict, verdictCls(g.safety.verdict), (g.safety.conditions&&g.safety.conditions.length? g.safety.conditions[0] : (g.safety.hazards&&g.safety.hazards.length? g.safety.hazards.length+' ملاحظة':'لا مخاطر')));
+    html+=gateTile('التكلفة', g.cost.verdict, verdictCls(g.cost.verdict), 'التكلفة '+Math.round(g.cost.landedCost)+' د.إ · الهامش '+Math.round(g.cost.grossMarginPct)+'% · بيع مقترح '+Math.round(g.cost.recommendedRetail)+' د.إ');
+    html+=gateTile('الأصالة', g.originality.verdict, verdictCls(g.originality.verdict), 'التشابه: '+g.originality.similarityRisk+' · '+s.originality+'/100');
+    html+=gateTile('الجودة', g.qa.verdict, verdictCls(g.qa.verdict), (g.qa.checks?g.qa.checks.length+' فحصًا':''));
+    html+='</div>';
+    html+='<div class="grid" style="margin-top:14px"><div class="score"><div class="n">'+s.readiness+'<span style="font-size:16px;color:var(--dim)">/100</span></div><div class="l">جاهزية الإطلاق'+(s.releaseReady?' · جاهز':'')+'</div></div>';
+    html+='<div class="score" style="border-color:var(--line)"><div class="n" style="color:var(--silver)">'+(finalRun.selectedConcept.estimatedWeightG??'—')+'g</div><div class="l">الوزن التقديري · فضة ٩٢٥</div></div></div>';
+    if(finalRun.blocked){
+      html+='<div class="blockers"><h3>التصميم محجوب — البوابات قالت لا</h3><ul>'+finalRun.blockReasons.map(r=>'<li>'+r+'</li>').join('')+'</ul><p style="color:#f0c9c9;font-size:13px;margin-top:8px">'+(finalRun.gates.safety.verdict==='HUMAN_REVIEW_REQUIRED'?'هذا المنتج يتطلب موافقة سلامة بشرية قبل أي إفراج — سيتواصل معك فريق السلامة، ولا يمكن تجاوز هذه البوابة من الواجهة.':'عدّل الميزانية أو المفهوم أو الاسم وأعد المحاولة — لا يمكن اعتماد تصميم لم يجتز البوابات.')+'</p></div>';
+    } else if(finalRun.production){
+      html+='<div class="preview">'+finalRun.production.svg+'<div class="cap">رسم الإنتاج — مُشتق من محرك الهندسة الحتمي (ليس صورة ذكاء اصطناعي) · '+finalRun.production.fileName+'</div></div>';
+      $('btnApprove').disabled=false;
+    }
+    $('gatesOut').innerHTML=html;
+  }catch(e){err('e4','تشغيل البوابات فشل: '+e.message);progress($('p4'),steps,0);}
+});
+
+$('btnApprove').addEventListener('click',()=>{
+  if(!finalRun||finalRun.blocked||!finalRun.production)return;
+  const p=finalRun.production;
+  const svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(p.svg);
+  const dxfUrl='data:application/dxf;charset=utf-8,'+encodeURIComponent(p.dxf);
+  $('approvedOut').innerHTML=
+    '<div class="approved"><h3>✓ اختيارك مسجل — '+p.sku+'</h3>'+
+    '<p>المفهوم: '+finalRun.selectedConcept.conceptName+' · الجاهزية '+finalRun.scores.readiness+'/100</p>'+
+    '<p>اعتمادك هنا هو موافقة العميل على الشكل والسعر. الإفراج للتصنيع يتطلب موافقات بشرية إضافية (مدير التصميم ثم العمليات) داخل خط الإنتاج — لا يُصنع شيء تلقائيًا.</p>'+
+    '<div class="downloads"><a class="btn ghost" download="'+p.fileName+'" href="'+svgUrl+'">تنزيل SVG</a>'+
+    '<a class="btn ghost" download="'+p.fileName.replace('.svg','.dxf')+'" href="'+dxfUrl+'">تنزيل DXF</a></div>'+
+    '<button class="btn" style="margin-top:16px" onclick="location.reload()">صمّم قطعة جديدة</button></div>';
+  goto(5);
+});
+</script>
+</body>
+</html>
