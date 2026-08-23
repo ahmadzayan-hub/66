@@ -8,6 +8,7 @@ import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import handler from '../api/pipeline.js';
+import intentHandler from '../api/intent.js';
 
 const publicDir = join(process.cwd(), 'public');
 const MIME: Record<string, string> = {
@@ -19,7 +20,8 @@ const MIME: Record<string, string> = {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
-  if (url.pathname === '/api/pipeline') {
+  if (url.pathname === '/api/pipeline' || url.pathname === '/api/intent') {
+    const route = url.pathname === '/api/intent' ? intentHandler : handler;
     const chunks: Buffer[] = [];
     for await (const chunk of req) chunks.push(chunk as Buffer);
     let body: unknown = {};
@@ -30,7 +32,7 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify({ error: 'invalid JSON body' }));
       return;
     }
-    await handler(
+    await route(
       { method: req.method, body },
       {
         setHeader: (k, v) => res.setHeader(k, v),

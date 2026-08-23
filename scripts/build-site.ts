@@ -214,4 +214,5 @@ writeFileSync(join(out, 'snapshot.html'), html);
 // The interactive Design Studio app is the landing page; the generated
 // snapshot remains the build-time verification record at /snapshot.html.
 copyFileSync(join(process.cwd(), 'web', 'index.html'), join(out, 'index.html'));
+copyFileSync(join(process.cwd(), 'web', 'co-design.html'), join(out, 'co-design.html'));
 console.log(`Site built: index.html (Design Studio app) + snapshot.html + artifacts (design ${result.designId}, readiness ${result.readiness.total}, lifecycle ${result.lifecycle.current})`);
